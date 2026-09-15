@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Team Josh — IC Exam Schedule</title>
+<style>
+:root{--red:#ed1b2f;--navy:#12213a;--muted:#64748b;--line:#e6eaf0;--bg:#f6f8fb}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--navy)}
+header{background:linear-gradient(135deg,#ed1b2f,#b90f20);color:#fff;padding:22px 18px 26px;text-align:center}
+header .brand{font-size:27px;font-weight:1000;letter-spacing:.5px}header h1{margin:8px 0 4px;font-size:25px}header p{margin:0;opacity:.9;font-size:13px}
+main{max-width:1050px;margin:20px auto;padding:0 14px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.search{flex:1;min-width:220px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px 14px;font-size:14px;outline:none}
+.btn{border:1px solid var(--line);border-radius:12px;padding:11px 14px;background:#fff;font-weight:900;color:var(--navy);cursor:pointer}.btn.active{background:var(--red);border-color:var(--red);color:#fff}
+.status{font-size:12px;color:var(--muted);font-weight:700;margin-left:auto}.month{margin:18px 0 26px}.month-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}.month-head h2{margin:0;font-size:19px}.month-head .line{height:1px;background:var(--line);flex:1}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;margin-bottom:10px;display:grid;grid-template-columns:112px 1fr;overflow:hidden;box-shadow:0 5px 18px rgba(18,33,58,.05)}
+.date{background:#fff7f8;border-right:1px solid #f2d8dc;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px}.date .num{font-size:35px;font-weight:1000;color:var(--red);line-height:1}.date .mo{font-size:12px;font-weight:900;margin-top:4px}.date .dow{font-size:11px;color:var(--muted);margin-top:3px}
+.body{padding:13px 16px}.deadline{display:inline-flex;gap:8px;align-items:center;background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:7px 10px;margin-bottom:10px}.dl-label{display:block;font-size:9px;text-transform:uppercase;font-weight:1000;color:var(--muted)}.dl-date{font-size:13px;font-weight:1000}
+.loc-label{font-size:10px;font-weight:1000;text-transform:uppercase;color:var(--muted);margin:8px 0 5px}.chips{display:flex;flex-wrap:wrap;gap:7px}.chip{display:inline-flex;padding:7px 10px;border-radius:999px;font-size:11px;font-weight:900}.chip.mm{background:#eaf2ff;color:#0b5fc7}.chip.prov{background:#ecfdf5;color:#0f7b4d}
+.empty{background:#fff;border:1px dashed var(--line);border-radius:14px;padding:30px;text-align:center;color:var(--muted)}.contact{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:22px;font-size:13px}.contact b{color:var(--red)}footer{text-align:center;color:var(--muted);font-size:11px;padding:20px}
+@media(max-width:600px){.card{grid-template-columns:82px 1fr}.date .num{font-size:28px}.body{padding:11px}.status{width:100%;margin-left:0}}
+</style></head>
+<body>
+<header><div class="brand">TEAM JOSH</div><h1>IC Offsite Exam Schedule</h1><p>October – December 2026 • Agent View</p></header>
+<main><div class="toolbar">
+<input id="search" class="search" placeholder="Search location, date or month…">
+<button class="btn active" data-region="all">All</button><button class="btn" data-region="mm">Metro Manila</button><button class="btn" data-region="prov">Provinces</button><button class="btn" id="refresh">↻ Refresh</button>
+<span id="status" class="status">Loading schedule…</span></div>
+<div id="list"></div>
+<div class="contact"><b>Got questions?</b><br>Email us at exam.licensing@prulifeuk.com.ph</div></main>
+<footer>Team Josh • Read-only Agent Schedule</footer>
+<script>
+const SUPABASE_URL="https://jefoxzslxtzknkcuafdt.supabase.co";
+const SUPABASE_KEY="sb_publishable_KSpZOjMCJuy_2gTJwX9OkA_AZkwdfUx";
+const MM=['MAKATI','ALABANG','ORTIGAS'];
+const MONTHS={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+const MONTH_FULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+let entries=[{"date": "03-Oct-26", "deadline": "17-Sep-26", "location": "MAKATI", "region": "mm"}, {"date": "03-Oct-26", "deadline": "17-Sep-26", "location": "ALABANG", "region": "mm"}, {"date": "10-Oct-26", "deadline": "24-Sep-26", "location": "MAKATI", "region": "mm"}, {"date": "10-Oct-26", "deadline": "24-Sep-26", "location": "ALABANG", "region": "mm"}, {"date": "17-Oct-26", "deadline": "01-Oct-26", "location": "ORTIGAS", "region": "mm"}, {"date": "17-Oct-26", "deadline": "01-Oct-26", "location": "MAKATI", "region": "mm"}, {"date": "17-Oct-26", "deadline": "01-Oct-26", "location": "ALABANG", "region": "mm"}, {"date": "24-Oct-26", "deadline": "08-Oct-26", "location": "ORTIGAS", "region": "mm"}, {"date": "24-Oct-26", "deadline": "08-Oct-26", "location": "MAKATI", "region": "mm"}, {"date": "24-Oct-26", "deadline": "08-Oct-26", "location": "ALABANG", "region": "mm"}, {"date": "03-Oct-26", "deadline": "17-Sep-26", "location": "BAGUIO", "region": "prov"}, {"date": "03-Oct-26", "deadline": "17-Sep-26", "location": "SANTIAGO ISABELA", "region": "prov"}, {"date": "03-Oct-26", "deadline": "17-Sep-26", "location": "NAGA", "region": "prov"}, {"date": "03-Oct-26", "deadline": "17-Sep-26", "location": "SAN FERNANDO PAMPANGA", "region": "prov"}, {"date": "10-Oct-26", "deadline": "24-Sep-26", "location": "LIPA", "region": "prov"}, {"date": "10-Oct-26", "deadline": "24-Sep-26", "location": "ILOILO", "region": "prov"}, {"date": "10-Oct-26", "deadline": "24-Sep-26", "location": "DAVAO", "region": "prov"}, {"date": "10-Oct-26", "deadline": "24-Sep-26", "location": "CEBU", "region": "prov"}, {"date": "10-Oct-26", "deadline": "24-Sep-26", "location": "LEGAZPI", "region": "prov"}, {"date": "17-Oct-26", "deadline": "01-Oct-26", "location": "BAGUIO", "region": "prov"}, {"date": "17-Oct-26", "deadline": "01-Oct-26", "location": "LUCENA", "region": "prov"}, {"date": "17-Oct-26", "deadline": "01-Oct-26", "location": "CEBU", "region": "prov"}, {"date": "17-Oct-26", "deadline": "01-Oct-26", "location": "DAVAO", "region": "prov"}, {"date": "17-Oct-26", "deadline": "01-Oct-26", "location": "CAGAYAN DE ORO CITY", "region": "prov"}, {"date": "17-Oct-26", "deadline": "01-Oct-26", "location": "TUGUEGARAO", "region": "prov"}, {"date": "24-Oct-26", "deadline": "08-Oct-26", "location": "CAGAYAN DE ORO CITY", "region": "prov"}, {"date": "24-Oct-26", "deadline": "08-Oct-26", "location": "TACLOBAN", "region": "prov"}, {"date": "24-Oct-26", "deadline": "08-Oct-26", "location": "LAOAG", "region": "prov"}, {"date": "24-Oct-26", "deadline": "08-Oct-26", "location": "DAGUPAN PANGASINAN", "region": "prov"}, {"date": "07-Nov-26", "deadline": "21-Oct-26", "location": "MAKATI", "region": "mm"}, {"date": "07-Nov-26", "deadline": "21-Oct-26", "location": "ALABANG", "region": "mm"}, {"date": "14-Nov-26", "deadline": "28-Oct-26", "location": "MAKATI", "region": "mm"}, {"date": "14-Nov-26", "deadline": "28-Oct-26", "location": "ALABANG", "region": "mm"}, {"date": "21-Nov-26", "deadline": "05-Nov-26", "location": "ORTIGAS", "region": "mm"}, {"date": "21-Nov-26", "deadline": "05-Nov-26", "location": "MAKATI", "region": "mm"}, {"date": "21-Nov-26", "deadline": "05-Nov-26", "location": "ALABANG", "region": "mm"}, {"date": "28-Nov-26", "deadline": "12-Nov-26", "location": "ORTIGAS", "region": "mm"}, {"date": "28-Nov-26", "deadline": "12-Nov-26", "location": "MAKATI", "region": "mm"}, {"date": "28-Nov-26", "deadline": "12-Nov-26", "location": "ALABANG", "region": "mm"}, {"date": "07-Nov-26", "deadline": "21-Oct-26", "location": "BAGUIO", "region": "prov"}, {"date": "07-Nov-26", "deadline": "21-Oct-26", "location": "LEGAZPI", "region": "prov"}, {"date": "07-Nov-26", "deadline": "21-Oct-26", "location": "SANTIAGO ISABELA", "region": "prov"}, {"date": "07-Nov-26", "deadline": "21-Oct-26", "location": "SAN FERNANDO PAMPANGA", "region": "prov"}, {"date": "14-Nov-26", "deadline": "28-Oct-26", "location": "LIPA", "region": "prov"}, {"date": "14-Nov-26", "deadline": "28-Oct-26", "location": "ILOILO", "region": "prov"}, {"date": "14-Nov-26", "deadline": "28-Oct-26", "location": "DAVAO", "region": "prov"}, {"date": "14-Nov-26", "deadline": "28-Oct-26", "location": "CEBU", "region": "prov"}, {"date": "14-Nov-26", "deadline": "28-Oct-26", "location": "TUGUEGARAO", "region": "prov"}, {"date": "21-Nov-26", "deadline": "05-Nov-26", "location": "DAGUPAN PANGASINAN", "region": "prov"}, {"date": "21-Nov-26", "deadline": "05-Nov-26", "location": "LAOAG", "region": "prov"}, {"date": "21-Nov-26", "deadline": "05-Nov-26", "location": "CEBU", "region": "prov"}, {"date": "21-Nov-26", "deadline": "05-Nov-26", "location": "DAVAO", "region": "prov"}, {"date": "21-Nov-26", "deadline": "05-Nov-26", "location": "CAGAYAN DE ORO CITY", "region": "prov"}, {"date": "28-Nov-26", "deadline": "12-Nov-26", "location": "TACLOBAN", "region": "prov"}, {"date": "28-Nov-26", "deadline": "12-Nov-26", "location": "CAGAYAN DE ORO CITY", "region": "prov"}, {"date": "28-Nov-26", "deadline": "12-Nov-26", "location": "BUTUAN", "region": "prov"}, {"date": "28-Nov-26", "deadline": "12-Nov-26", "location": "LUCENA", "region": "prov"}, {"date": "05-Dec-26", "deadline": "18-Nov-26", "location": "MAKATI", "region": "mm"}, {"date": "05-Dec-26", "deadline": "18-Nov-26", "location": "ALABANG", "region": "mm"}, {"date": "12-Dec-26", "deadline": "24-Nov-26", "location": "MAKATI", "region": "mm"}, {"date": "12-Dec-26", "deadline": "24-Nov-26", "location": "ALABANG", "region": "mm"}, {"date": "05-Dec-26", "deadline": "18-Nov-26", "location": "BAGUIO", "region": "prov"}, {"date": "05-Dec-26", "deadline": "18-Nov-26", "location": "LIPA", "region": "prov"}, {"date": "12-Dec-26", "deadline": "24-Nov-26", "location": "CEBU", "region": "prov"}, {"date": "12-Dec-26", "deadline": "24-Nov-26", "location": "DAVAO", "region": "prov"}, {"date": "12-Dec-26", "deadline": "24-Nov-26", "location": "CAGAYAN DE ORO CITY", "region": "prov"}], region='all', term='';
+function dateObj(s){const m=/^(\d{1,2})-([A-Za-z]{3})-(\d{2})$/.exec(s||'');if(!m)return null;const k=m[2][0].toUpperCase()+m[2].slice(1).toLowerCase();return k in MONTHS?new Date(2000+Number(m[3]),MONTHS[k],Number(m[1])):null}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(){
+ const box=document.getElementById('list');
+ let v=entries.filter(e=>region==='all'||e.region===region);
+ if(term){
+   const q=term.toLowerCase();
+   v=v.filter(e=>[e.date,e.deadline,e.location].join(' ').toLowerCase().includes(q) ||
+     ((dateObj(e.date)&&MONTH_FULL[dateObj(e.date).getMonth()])||'').toLowerCase().includes(q));
+ }
+ const groups={};
+ v.forEach(e=>{
+   const d=dateObj(e.date);
+   const k=d ? d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0') : e.date;
+   if(!groups[k]) groups[k]={date:d,dateText:e.date,deadlines:[],mm:[],prov:[]};
+   const g=groups[k];
+   if(g.deadlines.indexOf(e.deadline)<0) g.deadlines.push(e.deadline);
+   (e.region==='mm'?g.mm:g.prov).push(e);
+ });
+ const gs=Object.values(groups).sort((a,b)=>(a.date||0)-(b.date||0));
+ if(!gs.length){box.innerHTML='<div class="empty">No schedule found.</div>';return}
+ const months={};
+ gs.forEach(g=>{
+   const key=g.date?g.date.getFullYear()+'-'+g.date.getMonth():'unknown';
+   if(!months[key])months[key]={label:g.date?MONTH_FULL[g.date.getMonth()]+' '+g.date.getFullYear():'Schedule',groups:[]};
+   months[key].groups.push(g);
+ });
+ box.innerHTML=Object.values(months).map(m=>'<section class="month"><div class="month-head"><h2>'+esc(m.label)+'</h2><div class="line"></div></div>'+
+   m.groups.map(g=>{
+     const d=g.date;
+     const chips=(label,cls,list)=>list.length?'<div class="loc-group"><div class="loc-label">'+label+'</div><div class="chips">'+
+       list.map(e=>'<span class="chip '+cls+'">'+esc(e.location)+'</span>').join('')+'</div></div>':'';
+     return '<article class="card"><div class="date"><span class="num">'+(d?String(d.getDate()).padStart(2,'0'):esc(g.dateText))+'</span><span class="mo">'+(d?MONTH_FULL[d.getMonth()]+' '+d.getFullYear():'')+'</span><span class="dow">'+(d?DOW[d.getDay()]:'')+'</span></div>'+
+       '<div class="body"><div class="deadline"><span>📅</span><span><span class="dl-label">Deadline of Registration</span><span class="dl-date">'+esc(g.deadlines.join(' / '))+'</span></span></div>'+
+       chips('Metro Manila','mm',g.mm)+chips('Provinces','prov',g.prov)+'</div></article>';
+   }).join('')+'</section>').join('');
+}
+async function loadCloud(){
+ try{
+  const r=await fetch(SUPABASE_URL+'/rest/v1/app_state?select=value&key=eq.tjExamSchedule',{headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY}});
+  if(!r.ok)throw new Error('Cloud '+r.status);
+  const a=await r.json(), raw=a[0]&&a[0].value&&a[0].value.raw;
+  if(raw){const x=JSON.parse(raw);if(Array.isArray(x.rows)&&x.rows.length)entries=x.rows.map(r=>({date:r[0],deadline:r[1],location:r[2],region:MM.includes(String(r[2]).toUpperCase())?'mm':'prov'}))}
+  document.getElementById('status').textContent='☁ Live schedule';render()
+ }catch(e){document.getElementById('status').textContent='Offline — showing saved schedule';render()}
+}
+document.getElementById('search').addEventListener('input',e=>{term=e.target.value;render()});
+document.querySelectorAll('[data-region]').forEach(b=>b.addEventListener('click',()=>{region=b.dataset.region;document.querySelectorAll('[data-region]').forEach(x=>x.classList.toggle('active',x===b));render()}));
+document.getElementById('refresh').onclick=loadCloud;render();loadCloud();setInterval(loadCloud,30000);
+</script></body></html>
